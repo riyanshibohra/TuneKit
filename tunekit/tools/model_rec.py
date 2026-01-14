@@ -4,142 +4,37 @@ Model Recommendation Tool
 Simple 3-factor scoring: Task (50) + Size (30) + Output (20) = 100 points
 """
 
+import os
+import json
 from typing import Dict, List
 
 # ════════════════════════════════════════════════════════════════════════════
-# MODEL METADATA
+# CONFIGURATION
 # ════════════════════════════════════════════════════════════════════════════
 
-MODELS = {
-    'phi-4-mini': {
-        'id': 'microsoft/Phi-4-mini-instruct',
-        'name': 'Phi-4 Mini',
-        'size': '3.8B',
-        'context_window': 128000,
-        'training_time_base': 3,
-        'cost_base': 0.036,
-        'gpu_tier': 'A10G',
-        'memory_gb': 12,
-        'accuracy_baseline': 87
-    },
-    'gemma-3-2b': {
-        'id': 'google/gemma-2-2b-it',
-        'name': 'Gemma 2 2B',
-        'size': '2B',
-        'context_window': 8192,
-        'training_time_base': 2,
-        'cost_base': 0.012,
-        'gpu_tier': 'T4',
-        'memory_gb': 6,
-        'accuracy_baseline': 82
-    },
-    'llama-3.2-3b': {
-        'id': 'meta-llama/Llama-3.2-3B-Instruct',
-        'name': 'Llama 3.2 3B',
-        'size': '3B',
-        'context_window': 128000,
-        'training_time_base': 4,
-        'cost_base': 0.048,
-        'gpu_tier': 'A10G',
-        'memory_gb': 10,
-        'accuracy_baseline': 89
-    },
-    'qwen-2.5-3b': {
-        'id': 'Qwen/Qwen2.5-3B-Instruct',
-        'name': 'Qwen 2.5 3B',
-        'size': '3B',
-        'context_window': 32768,
-        'training_time_base': 4,
-        'cost_base': 0.048,
-        'gpu_tier': 'A10G',
-        'memory_gb': 10,
-        'accuracy_baseline': 88
-    },
-    'mistral-7b': {
-        'id': 'mistralai/Mistral-7B-Instruct-v0.3',
-        'name': 'Mistral 7B',
-        'size': '7B',
-        'context_window': 8192,
-        'training_time_base': 6,
-        'cost_base': 0.30,
-        'gpu_tier': 'A100-40GB',
-        'memory_gb': 18,
-        'accuracy_baseline': 91
-    }
-}
+DATA_DIR = os.path.dirname(os.path.abspath(__file__)).replace('tools', 'data')
+CONFIG_PATH = os.path.join(DATA_DIR, 'models.json')
 
-# ════════════════════════════════════════════════════════════════════════════
-# DEPLOYMENT FILTERS
-# ════════════════════════════════════════════════════════════════════════════
+def load_config() -> dict:
+    """Load configuration from JSON file."""
+    try:
+        with open(CONFIG_PATH, 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        # Fallback empty config if file is missing (should not happen in prod)
+        return {"models": {}, "defaults": {}, "tiebreaker": {}}
 
-DEPLOYMENT_FILTERS = {
-    'cloud_api': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b', 'qwen-2.5-3b', 'mistral-7b'],
-    'desktop_app': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b', 'qwen-2.5-3b', 'mistral-7b'],
-    'mobile_app': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b'],
-    'ios_app': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b'],
-    'android_app': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b'],
-    'web_browser': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b'],
-    'edge_device': ['gemma-3-2b', 'phi-4-mini'],
-    'not_sure': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b', 'qwen-2.5-3b', 'mistral-7b']
-}
+CONFIG = load_config()
 
-# ════════════════════════════════════════════════════════════════════════════
-# SCORING TABLES
-# ════════════════════════════════════════════════════════════════════════════
-
-# Factor 1: TASK TYPE (50 points max)
-TASK_SCORES = {
-    'classify': {
-        'phi-4-mini': 50, 'gemma-3-2b': 35, 'llama-3.2-3b': 30, 'qwen-2.5-3b': 25, 'mistral-7b': 20
-    },
-    'qa': {
-        'llama-3.2-3b': 50, 'mistral-7b': 45, 'phi-4-mini': 35, 'qwen-2.5-3b': 30, 'gemma-3-2b': 20
-    },
-    'conversation': {
-        'llama-3.2-3b': 50, 'mistral-7b': 45, 'qwen-2.5-3b': 35, 'phi-4-mini': 25, 'gemma-3-2b': 20
-    },
-    'generation': {
-        'mistral-7b': 50, 'llama-3.2-3b': 45, 'qwen-2.5-3b': 30, 'phi-4-mini': 20, 'gemma-3-2b': 20
-    },
-    'extraction': {
-        'phi-4-mini': 50, 'llama-3.2-3b': 40, 'mistral-7b': 35, 'qwen-2.5-3b': 30, 'gemma-3-2b': 25
-    }
-}
-
-# Factor 2: DATASET SIZE (30 points max)
-SIZE_SCORES_SMALL = {  # < 500 examples
-    'gemma-3-2b': 30, 'phi-4-mini': 20, 'llama-3.2-3b': 10, 'qwen-2.5-3b': 10, 'mistral-7b': 5
-}
-SIZE_SCORES_MEDIUM = {  # 500-2000 examples
-    'llama-3.2-3b': 30, 'phi-4-mini': 25, 'mistral-7b': 20, 'qwen-2.5-3b': 20, 'gemma-3-2b': 15
-}
-SIZE_SCORES_LARGE = {  # > 2000 examples
-    'llama-3.2-3b': 30, 'mistral-7b': 25, 'phi-4-mini': 10, 'qwen-2.5-3b': 10, 'gemma-3-2b': 5
-}
-
-# Factor 3: OUTPUT CHARACTERISTICS (20 points max)
-OUTPUT_SCORES_LONG = {  # avg_response_length > 200
-    'mistral-7b': 20, 'llama-3.2-3b': 15, 'qwen-2.5-3b': 10, 'phi-4-mini': 5, 'gemma-3-2b': 5
-}
-OUTPUT_SCORES_JSON = {  # JSON output detected
-    'phi-4-mini': 20, 'llama-3.2-3b': 15, 'mistral-7b': 10, 'qwen-2.5-3b': 10, 'gemma-3-2b': 5
-}
-
-# Multi-turn bonus (+10 points max)
-MULTI_TURN_BONUS = {
-    'llama-3.2-3b': 10, 'mistral-7b': 8, 'qwen-2.5-3b': 6, 'phi-4-mini': 3, 'gemma-3-2b': 2
-}
-
-# Tie-breaker priorities per task
-TIEBREAKER = {
-    'classify': ['phi-4-mini', 'gemma-3-2b', 'llama-3.2-3b', 'mistral-7b', 'qwen-2.5-3b'],
-    'extraction': ['phi-4-mini', 'llama-3.2-3b', 'mistral-7b', 'qwen-2.5-3b', 'gemma-3-2b'],
-    'qa': ['llama-3.2-3b', 'mistral-7b', 'phi-4-mini', 'qwen-2.5-3b', 'gemma-3-2b'],
-    'conversation': ['llama-3.2-3b', 'mistral-7b', 'qwen-2.5-3b', 'phi-4-mini', 'gemma-3-2b'],
-    'generation': ['mistral-7b', 'llama-3.2-3b', 'qwen-2.5-3b', 'phi-4-mini', 'gemma-3-2b'],
-    'default': ['mistral-7b', 'llama-3.2-3b', 'phi-4-mini', 'qwen-2.5-3b', 'gemma-3-2b']
-}
-
+# Helper to access metadata easily
+MODELS = {k: v['metadata'] for k, v in CONFIG['models'].items()}
+DEFAULTS = CONFIG.get('defaults', {
+    "task_score": 25,
+    "size_score": 15,
+    "output_score": 10,
+    "multi_turn_bonus": 0
+})
+TIEBREAKER = CONFIG.get('tiebreaker', {})
 
 # ════════════════════════════════════════════════════════════════════════════
 # MAIN RECOMMENDATION FUNCTION
@@ -180,47 +75,54 @@ def recommend_model(
     
     if deployment_target == 'edge_device':
         return build_response(
-            primary_key='gemma-3-2b',
+            primary_key='gemma-3-270m',
             score=100,
-            all_scores={'gemma-3-2b': 100, 'phi-4-mini': 80},
-            reasons=['Smallest model (2B params)', 'Optimized for low-power devices'],
+            all_scores={'gemma-3-270m': 100, 'gemma-3-2b': 90, 'phi-4-mini': 80},
+            reasons=['Smallest model (270M params)', 'Optimized for low-power devices'],
             num_examples=num_examples,
-            alternatives=[{'model': 'phi-4-mini', 'score': 80}]
+            alternatives=[{'model': 'gemma-3-2b', 'score': 90}]
         )
     
-    # Filter models by deployment target
-    allowed_models = DEPLOYMENT_FILTERS.get(deployment_target, DEPLOYMENT_FILTERS['not_sure'])
-    
-    # Score each model
+    # Score each model based on JSON config
     scores = {}
-    for model_key in allowed_models:
-        # Factor 1: Task type (50 points)
-        task_scores = TASK_SCORES.get(user_task, TASK_SCORES['classify'])
-        task_score = task_scores.get(model_key, 25)
+    
+    for model_key, model_data in CONFIG['models'].items():
+        # 1. Filter by deployment target
+        allowed_deployments = model_data.get('deployment', [])
+        if deployment_target != 'not_sure' and deployment_target not in allowed_deployments:
+            continue
+            
+        model_scores = model_data.get('scores', {})
         
-        # Factor 2: Dataset size (30 points)
+        # Factor 1: Task type
+        task_scores_map = model_scores.get('task', {})
+        task_score = task_scores_map.get(user_task, DEFAULTS['task_score'])
+        
+        # Factor 2: Dataset size
+        size_scores_map = model_scores.get('size', {})
         if num_examples < 500:
-            size_score = SIZE_SCORES_SMALL.get(model_key, 15)
+            size_score = size_scores_map.get('small', DEFAULTS['size_score'])
         elif num_examples >= 2000:
-            size_score = SIZE_SCORES_LARGE.get(model_key, 15)
+            size_score = size_scores_map.get('large', DEFAULTS['size_score'])
         else:
-            size_score = SIZE_SCORES_MEDIUM.get(model_key, 15)
+            size_score = size_scores_map.get('medium', DEFAULTS['size_score'])
         
-        # Factor 3: Output characteristics (20 points)
+        # Factor 3: Output characteristics
+        output_scores_map = model_scores.get('output', {})
         if avg_response_length > 200:
-            output_score = OUTPUT_SCORES_LONG.get(model_key, 10)
+            output_score = output_scores_map.get('long', DEFAULTS['output_score'])
         elif looks_like_json:
-            output_score = OUTPUT_SCORES_JSON.get(model_key, 10)
+            output_score = output_scores_map.get('json', DEFAULTS['output_score'])
         else:
-            output_score = 10
+            output_score = DEFAULTS['output_score']
         
-        # Bonus: Multi-turn conversations (+10 points)
-        multi_turn_bonus = MULTI_TURN_BONUS.get(model_key, 0) if is_multi_turn else 0
+        # Bonus: Multi-turn
+        multi_turn_bonus = model_scores.get('multi_turn_bonus', DEFAULTS['multi_turn_bonus']) if is_multi_turn else 0
         
         scores[model_key] = task_score + size_score + output_score + multi_turn_bonus
     
     # Pick winner with tie-breaking
-    priority_order = TIEBREAKER.get(user_task, TIEBREAKER['default'])
+    priority_order = TIEBREAKER.get(user_task, TIEBREAKER.get('default', []))
     
     def get_priority(model_key):
         try:
@@ -228,8 +130,19 @@ def recommend_model(
         except ValueError:
             return 99
     
+    # Sort by score DESC, then by priority ASC
     sorted_models = sorted(scores.items(), key=lambda x: (-x[1], get_priority(x[0])))
     
+    if not sorted_models:
+        # Fallback if no models match filters
+        return build_response(
+            primary_key='phi-4-mini', # Fallback safe default
+            score=50,
+            all_scores={'phi-4-mini': 50},
+            reasons=['Fallback recommendation (no models matched specific criteria)'],
+            num_examples=num_examples
+        )
+
     primary_key = sorted_models[0][0]
     primary_score = sorted_models[0][1]
     
@@ -238,27 +151,26 @@ def recommend_model(
     # Build alternatives
     alternatives = []
     for model_key, score in sorted_models[1:3]:
-        model = MODELS[model_key]
+        model_meta = MODELS[model_key]
         alt_reasons = []
         
         if score >= primary_score - 10:
             alt_reasons.append(f"Close match ({score}/100)")
         
-        if model_key in ['llama-3.2-3b', 'gemma-3-2b']:
-            if model_key == 'llama-3.2-3b':
-                alt_reasons.append("Requires HuggingFace approval (gated)")
-            elif model_key == 'gemma-3-2b':
-                alt_reasons.append("Requires terms agreement (gated)")
+        # Check gated status (simplified logic based on ID pattern)
+        if "meta-llama" in model_meta['id'] or "gemma" in model_meta['id']:
+             alt_reasons.append("Requires HuggingFace approval (gated)")
         
-        if model['training_time_base'] < MODELS[primary_key]['training_time_base']:
-            time_diff = MODELS[primary_key]['training_time_base'] - model['training_time_base']
+        primary_meta = MODELS[primary_key]
+        if model_meta.get('training_time_base', 0) < primary_meta.get('training_time_base', 0):
+            time_diff = primary_meta['training_time_base'] - model_meta['training_time_base']
             alt_reasons.append(f"~{time_diff} min faster training")
         
-        if model['memory_gb'] < MODELS[primary_key]['memory_gb']:
-            alt_reasons.append(f"Lower VRAM ({model['memory_gb']}GB vs {MODELS[primary_key]['memory_gb']}GB)")
+        if model_meta.get('memory_gb', 0) < primary_meta.get('memory_gb', 0):
+            alt_reasons.append(f"Lower VRAM ({model_meta['memory_gb']}GB vs {primary_meta['memory_gb']}GB)")
         
-        if model['context_window'] > MODELS[primary_key]['context_window']:
-            alt_reasons.append(f"Larger context ({model['context_window']//1000}K tokens)")
+        if model_meta.get('context_window', 0) > primary_meta.get('context_window', 0):
+            alt_reasons.append(f"Larger context ({model_meta['context_window']//1000}K tokens)")
         
         alternatives.append({
             'model': model_key,
@@ -279,54 +191,35 @@ def recommend_model(
 def generate_reasons(model_key: str, task: str, num_examples: int, avg_response: int, is_json: bool, is_multi_turn: bool, deployment: str) -> List[str]:
     """Generate human-readable reasons for the recommendation."""
     reasons = []
-    model = MODELS[model_key]
+    model_data = CONFIG['models'].get(model_key, {})
+    model_meta = model_data.get('metadata', {})
+    reasons_config = model_data.get('reasons', {})
     
     # Task-based reason
-    task_reasons = {
-        ('phi-4-mini', 'classify'): 'Best for classification tasks',
-        ('gemma-3-2b', 'classify'): 'Fast and efficient for classification',
-        ('phi-4-mini', 'extraction'): 'Excellent at structured extraction',
-        ('qwen-2.5-3b', 'extraction'): 'Strong JSON/structured output',
-        ('llama-3.2-3b', 'qa'): 'Top performer for Q&A tasks',
-        ('mistral-7b', 'qa'): 'Strong reasoning and knowledge base',
-        ('phi-4-mini', 'qa'): 'Excellent reasoning capabilities',
-        ('llama-3.2-3b', 'conversation'): 'Best for conversational AI',
-        ('mistral-7b', 'conversation'): 'Natural dialogue and context tracking',
-        ('qwen-2.5-3b', 'conversation'): 'Multilingual conversation support',
-        ('mistral-7b', 'generation'): 'Best for long-form generation',
-        ('llama-3.2-3b', 'generation'): 'Creative and coherent text generation',
-        ('qwen-2.5-3b', 'generation'): 'Strong multilingual generation',
-    }
-    reason = task_reasons.get((model_key, task))
-    if reason:
-        reasons.append(reason)
+    if task in reasons_config:
+        reasons.append(reasons_config[task])
     else:
         reasons.append(f"Strong performance for {task} tasks")
     
-    # Model characteristics
-    if model_key in ['phi-4-mini', 'mistral-7b']:
-        reasons.append('Supports function calling')
+    # Generic features
+    reasons.extend(reasons_config.get('features', [])[:2])
     
-    if model_key == 'qwen-2.5-3b':
-        reasons.append('Multilingual (29 languages)')
+    # Context window logic
+    context_window = model_meta.get('context_window', 0)
+    if context_window >= 128000:
+        reasons.append('128K token context window')
+    elif context_window >= 32000:
+        reasons.append('32K token context window')
     
-    if model_key in ['gemma-3-2b', 'llama-3.2-3b']:
-        reasons.append('Optimized for on-device deployment')
-    
-    if model_key in ['phi-4-mini', 'llama-3.2-3b', 'qwen-2.5-3b']:
-        context_window = model.get('context_window', 0)
-        if context_window >= 128000:
-            reasons.append('128K token context window')
-        elif context_window >= 32000:
-            reasons.append('32K token context window')
-    
-    if is_multi_turn and model_key in ['llama-3.2-3b', 'mistral-7b']:
+    if is_multi_turn and model_data.get('scores', {}).get('multi_turn_bonus', 0) > 5:
         reasons.append('Excellent at multi-turn context tracking')
     
     # Size-based reason
     if num_examples < 500:
         if model_key == 'gemma-3-2b':
             reasons.append('Ideal for small datasets')
+        elif model_key == 'gemma-3-270m':
+            reasons.append('Perfect for tiny datasets')
         elif model_key == 'phi-4-mini':
             reasons.append('Works well with limited data')
     elif num_examples > 2000:
@@ -340,14 +233,22 @@ def generate_reasons(model_key: str, task: str, num_examples: int, avg_response:
         reasons.append('Excellent JSON/structured output')
     
     # Deployment reason
-    if deployment in ['mobile_app', 'ios_app', 'android_app'] and model_key in ['phi-4-mini', 'gemma-3-2b']:
+    if deployment in ['mobile_app', 'ios_app', 'android_app'] and model_key in ['phi-4-mini', 'gemma-3-2b', 'gemma-3-270m']:
         reasons.append('Optimized for mobile deployment')
-    elif deployment == 'web_browser' and model_key in ['gemma-3-2b', 'phi-4-mini']:
+    elif deployment == 'web_browser' and model_key in ['gemma-3-2b', 'phi-4-mini', 'gemma-3-270m']:
         reasons.append('Runs efficiently in browser')
-    elif deployment == 'edge_device' and model_key == 'gemma-3-2b':
+    elif deployment == 'edge_device' and model_key in ['gemma-3-2b', 'gemma-3-270m']:
         reasons.append('Designed for edge devices')
     
-    return reasons[:5]
+    # Deduplicate and limit
+    unique_reasons = []
+    seen = set()
+    for r in reasons:
+        if r not in seen:
+            unique_reasons.append(r)
+            seen.add(r)
+            
+    return unique_reasons[:5]
 
 
 def build_response(

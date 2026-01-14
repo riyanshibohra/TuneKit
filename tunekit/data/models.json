@@ -1,0 +1,351 @@
+{
+  "models": {
+    "phi-4-mini": {
+      "metadata": {
+        "id": "microsoft/Phi-4-mini-instruct",
+        "name": "Phi-4 Mini",
+        "size": "3.8B",
+        "context_window": 128000,
+        "training_time_base": 3,
+        "cost_base": 0.036,
+        "gpu_tier": "A10G",
+        "memory_gb": 12,
+        "accuracy_baseline": 87
+      },
+      "scores": {
+        "task": {
+          "classify": 50,
+          "qa": 35,
+          "conversation": 25,
+          "generation": 20,
+          "extraction": 50
+        },
+        "size": {
+          "small": 20,
+          "medium": 25,
+          "large": 10
+        },
+        "output": {
+          "long": 5,
+          "json": 20
+        },
+        "multi_turn_bonus": 3
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "web_browser",
+        "not_sure"
+      ],
+      "reasons": {
+        "classify": "Best for classification tasks",
+        "extraction": "Excellent at structured extraction",
+        "qa": "Excellent reasoning capabilities",
+        "features": [
+          "Supports function calling",
+          "Works well with limited data"
+        ]
+      }
+    },
+    "gemma-3-2b": {
+      "metadata": {
+        "id": "google/gemma-2-2b-it",
+        "name": "Gemma 2 2B",
+        "size": "2B",
+        "context_window": 8192,
+        "training_time_base": 2,
+        "cost_base": 0.012,
+        "gpu_tier": "T4",
+        "memory_gb": 6,
+        "accuracy_baseline": 82
+      },
+      "scores": {
+        "task": {
+          "classify": 35,
+          "qa": 20,
+          "conversation": 20,
+          "generation": 20,
+          "extraction": 25
+        },
+        "size": {
+          "small": 30,
+          "medium": 15,
+          "large": 5
+        },
+        "output": {
+          "long": 5,
+          "json": 5
+        },
+        "multi_turn_bonus": 2
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "mobile_app",
+        "ios_app",
+        "android_app",
+        "web_browser",
+        "edge_device",
+        "not_sure"
+      ],
+      "reasons": {
+        "classify": "Fast and efficient for classification",
+        "features": [
+          "Optimized for on-device deployment",
+          "Ideal for small datasets"
+        ]
+      }
+    },
+    "llama-3.2-3b": {
+      "metadata": {
+        "id": "meta-llama/Llama-3.2-3B-Instruct",
+        "name": "Llama 3.2 3B",
+        "size": "3B",
+        "context_window": 128000,
+        "training_time_base": 4,
+        "cost_base": 0.048,
+        "gpu_tier": "A10G",
+        "memory_gb": 10,
+        "accuracy_baseline": 89
+      },
+      "scores": {
+        "task": {
+          "classify": 30,
+          "qa": 50,
+          "conversation": 50,
+          "generation": 45,
+          "extraction": 40
+        },
+        "size": {
+          "small": 10,
+          "medium": 30,
+          "large": 30
+        },
+        "output": {
+          "long": 15,
+          "json": 15
+        },
+        "multi_turn_bonus": 10
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "mobile_app",
+        "ios_app",
+        "android_app",
+        "web_browser",
+        "not_sure"
+      ],
+      "reasons": {
+        "qa": "Top performer for Q&A tasks",
+        "conversation": "Best for conversational AI",
+        "generation": "Creative and coherent text generation",
+        "features": [
+          "Optimized for on-device deployment",
+          "Excellent at multi-turn context tracking"
+        ]
+      }
+    },
+    "qwen-2.5-3b": {
+      "metadata": {
+        "id": "Qwen/Qwen2.5-3B-Instruct",
+        "name": "Qwen 2.5 3B",
+        "size": "3B",
+        "context_window": 32768,
+        "training_time_base": 4,
+        "cost_base": 0.048,
+        "gpu_tier": "A10G",
+        "memory_gb": 10,
+        "accuracy_baseline": 88
+      },
+      "scores": {
+        "task": {
+          "classify": 25,
+          "qa": 30,
+          "conversation": 35,
+          "generation": 30,
+          "extraction": 30
+        },
+        "size": {
+          "small": 10,
+          "medium": 20,
+          "large": 10
+        },
+        "output": {
+          "long": 10,
+          "json": 10
+        },
+        "multi_turn_bonus": 6
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "mobile_app",
+        "ios_app",
+        "android_app",
+        "web_browser",
+        "edge_device",
+        "not_sure"
+      ],
+      "reasons": {
+        "extraction": "Strong JSON/structured output",
+        "conversation": "Multilingual conversation support",
+        "generation": "Strong multilingual generation",
+        "features": [
+          "Multilingual (29 languages)"
+        ]
+      }
+    },
+    "mistral-7b": {
+      "metadata": {
+        "id": "mistralai/Mistral-7B-Instruct-v0.3",
+        "name": "Mistral 7B",
+        "size": "7B",
+        "context_window": 8192,
+        "training_time_base": 6,
+        "cost_base": 0.3,
+        "gpu_tier": "A100-40GB",
+        "memory_gb": 18,
+        "accuracy_baseline": 91
+      },
+      "scores": {
+        "task": {
+          "classify": 20,
+          "qa": 45,
+          "conversation": 45,
+          "generation": 50,
+          "extraction": 35
+        },
+        "size": {
+          "small": 5,
+          "medium": 20,
+          "large": 25
+        },
+        "output": {
+          "long": 20,
+          "json": 10
+        },
+        "multi_turn_bonus": 8
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "not_sure"
+      ],
+      "reasons": {
+        "qa": "Strong reasoning and knowledge base",
+        "conversation": "Natural dialogue and context tracking",
+        "generation": "Best for long-form generation",
+        "features": [
+          "Supports function calling",
+          "Optimized for longer outputs"
+        ]
+      }
+    },
+    "gemma-3-270m": {
+      "metadata": {
+        "id": "google/gemma-3-270m-it",
+        "name": "Gemma 3 270M",
+        "size": "270M",
+        "context_window": 32768,
+        "training_time_base": 3,
+        "cost_base": 0.0,
+        "gpu_tier": "T4",
+        "memory_gb": 8,
+        "accuracy_baseline": 80
+      },
+      "scores": {
+        "task": {
+          "classify": 100,
+          "qa": 20,
+          "conversation": 20,
+          "generation": 15,
+          "extraction": 40
+        },
+        "size": {
+          "small": 50,
+          "medium": 20,
+          "large": 20
+        },
+        "output": {
+          "long": 0,
+          "json": 10
+        },
+        "multi_turn_bonus": 0
+      },
+      "deployment": [
+        "cloud_api",
+        "desktop_app",
+        "mobile_app",
+        "ios_app",
+        "android_app",
+        "web_browser",
+        "edge_device",
+        "not_sure"
+      ],
+      "reasons": {
+        "features": [
+          "Ultra-lightweight",
+          "Mobile-ready",
+          "32K context"
+        ]
+      }
+    }
+  },
+  "defaults": {
+    "task_score": 25,
+    "size_score": 15,
+    "output_score": 10,
+    "multi_turn_bonus": 0
+  },
+  "tiebreaker": {
+    "classify": [
+      "phi-4-mini",
+      "gemma-3-2b",
+      "llama-3.2-3b",
+      "mistral-7b",
+      "qwen-2.5-3b",
+      "gemma-3-270m"
+    ],
+    "extraction": [
+      "phi-4-mini",
+      "llama-3.2-3b",
+      "mistral-7b",
+      "qwen-2.5-3b",
+      "gemma-3-2b",
+      "gemma-3-270m"
+    ],
+    "qa": [
+      "llama-3.2-3b",
+      "mistral-7b",
+      "phi-4-mini",
+      "qwen-2.5-3b",
+      "gemma-3-2b",
+      "gemma-3-270m"
+    ],
+    "conversation": [
+      "llama-3.2-3b",
+      "mistral-7b",
+      "qwen-2.5-3b",
+      "phi-4-mini",
+      "gemma-3-2b",
+      "gemma-3-270m"
+    ],
+    "generation": [
+      "mistral-7b",
+      "llama-3.2-3b",
+      "qwen-2.5-3b",
+      "phi-4-mini",
+      "gemma-3-2b",
+      "gemma-3-270m"
+    ],
+    "default": [
+      "mistral-7b",
+      "llama-3.2-3b",
+      "phi-4-mini",
+      "qwen-2.5-3b",
+      "gemma-3-2b",
+      "gemma-3-270m"
+    ]
+  }
+}

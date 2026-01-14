@@ -17,6 +17,7 @@ from .tools import (
     analyze_dataset,
     recommend_model,
     generate_package,
+    enrich_dataset,
 )
 
 __version__ = "0.1.0"
@@ -28,4 +29,5 @@ __all__ = [
     "analyze_dataset",
     "recommend_model",
     "generate_package",
+    "enrich_dataset",
 ]
