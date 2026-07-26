@@ -31,6 +31,7 @@ from tunekit import (
     analyze_dataset,
     generate_package,
     recommend_model,
+    enrich_dataset,
 )
 from tunekit.training import (
     generate_training_notebook,
@@ -217,6 +218,12 @@ class PlanRequest(BaseModel):
 
 class GenerateRequest(BaseModel):
     session_id: str
+
+
+class EnrichRequest(BaseModel):
+    session_id: str
+    top_n: Optional[int] = None
+    balance: bool = True
 
 
 class SessionResponse(BaseModel):
@@ -777,6 +784,78 @@ async def generate(request: GenerateRequest):
         package_path=package_path,
         download_url=f"/download/{session_id}",
     )
+
+
+@app.post("/enrich")
+async def enrich(request: EnrichRequest):
+    """Enrich the dataset with metrics, prioritization and balancing."""
+    session_id = request.session_id
+    
+    if session_id not in sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    session = sessions[session_id]
+    state = session.get("state")
+    
+    if not state:
+        raise HTTPException(status_code=400, detail="No data found")
+        
+    # Reload raw_data if needed
+    if not reload_raw_data_if_needed(session):
+        raise HTTPException(status_code=400, detail="Could not load data")
+        
+    # Set config
+    state["enrich_config"] = {
+        "top_n": request.top_n,
+        "balance": request.balance
+    }
+    
+    result = enrich_dataset(state)
+    
+    # Update state with enriched data
+    # IMPORTANT: We replace raw_data so downstream tools use the improved version
+    if result.get("enriched_data"):
+        state["raw_data"] = result["enriched_data"]
+        state["num_rows"] = len(result["enriched_data"])
+        
+        # Update file on disk with enriched data?
+        # Maybe we should save a new file version.
+        # For now, let's just update memory state and maybe save to a temp file if we want to download it.
+        
+        # Save enriched data to a new file for persistence/download
+        original_path = session["file_path"]
+        name, ext = os.path.splitext(original_path)
+        enriched_path = f"{name}_enriched{ext}"
+        
+        try:
+            with open(enriched_path, 'w', encoding='utf-8') as f:
+                for entry in result["enriched_data"]:
+                    f.write(json.dumps(entry) + '\n')
+            
+            # Update session to point to new file
+            session["file_path"] = enriched_path
+            state["file_path"] = enriched_path
+            
+        except Exception as e:
+            print(f"Warning: Failed to save enriched file: {e}")
+    
+    state.update(result)
+    
+    # Re-run validation/analysis on new data
+    val_res = validate_quality(state)
+    state.update(val_res)
+    
+    # Clear raw_data to save memory
+    state["raw_data"] = None
+    sessions[session_id]["state"] = state
+    
+    return {
+        "session_id": session_id,
+        "status": "success",
+        "stats": result.get("enrichment_stats", {}),
+        "quality_score": state.get("quality_score"),
+        "quality_issues": state.get("quality_issues")
+    }
 
 
 @app.get("/download/{session_id}")

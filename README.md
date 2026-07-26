@@ -116,21 +116,65 @@ TuneKit uses the standard conversation format:
 
 ---
 
-## Run Locally
+## Data Enrichment
 
-```bash
-# Clone the repo
-git clone https://github.com/riyanshibohra/TuneKit.git
-cd TuneKit
+TuneKit now includes tools to automatically improve your dataset quality before training:
 
-# Install dependencies
-pip install -r requirements.txt
+- **Quality Scoring**: Evaluates every conversation on complexity, lexical diversity, and dialogue balance.
+- **Smart Prioritization**: Automatically ranks examples and filters out low-quality ones.
+- **Class Balancing**: Detects underrepresented classes in classification datasets and automatically balances them.
 
-# Start the server
-uvicorn api.main:app --reload
-```
+---
 
-Open [http://localhost:8000](http://localhost:8000) in your browser.
+## Development Setup
+
+### Prerequisites
+- Python 3.10+
+- Git
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/riyanshibohra/TuneKit.git
+   cd TuneKit
+   ```
+
+2. **Create a virtual environment (Recommended)**
+   ```bash
+   # Windows
+   python -m venv venv
+   .\venv\Scripts\activate
+
+   # macOS/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configuration**
+   Copy `.env.example` to `.env` and configure your tokens:
+   ```bash
+   # Windows (PowerShell)
+   cp .env.example .env
+
+   # macOS/Linux
+   cp .env.example .env
+   ```
+   
+   > **Note:** A `GITHUB_TOKEN` is required to automatically create private Gists for the Colab notebooks.
+   > [Generate a token here](https://github.com/settings/tokens) (Scope: `gist`).
+
+5. **Start the server**
+   ```bash
+   uvicorn api.main:app --reload
+   ```
+
+   The app will be available at [http://localhost:8000](http://localhost:8000).
 
 ---
 
